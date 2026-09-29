@@ -1,14 +1,16 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -std=c11
 
-all:
+all: alarm_clock
+
+alarm_clock: alarm_clock.c
 	$(CC) $(CFLAGS) alarm_clock.c -o alarm_clock
 
-run:
+run: alarm_clock
 	./alarm_clock
 
-trace:
-	strace ./alarm_clock 2> strace.txt
+trace: alarm_clock
+	strace -f -o strace.txt ./alarm_clock
 
 clean:
-	rm -f alarm_clock strace.txt output.txt
+	rm -f alarm_clock strace.txt

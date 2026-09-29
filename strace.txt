@@ -1,55 +1,53 @@
-execve("./alarm_clock", ["./alarm_clock"], 0x7fff80301f40 /* 31 vars */) = 0
-brk(NULL)                               = 0x63550d2fe000
-mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7342cd640000
-access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
-openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
-fstat(3, {st_mode=S_IFREG|0644, st_size=20087, ...}) = 0
-mmap(NULL, 20087, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7342cd63b000
-close(3)                                = 0
-openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
-read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 \250\2\0\0\0\0\0"..., 832) = 832
-pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 840, 64) = 840
-fstat(3, {st_mode=S_IFREG|0755, st_size=2186512, ...}) = 0
-pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 840, 64) = 840
-mmap(NULL, 2231696, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7342cd400000
-mmap(0x7342cd428000, 1671168, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x28000) = 0x7342cd428000
-mmap(0x7342cd5c0000, 319488, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1c0000) = 0x7342cd5c0000
-mmap(0x7342cd60e000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x20d000) = 0x7342cd60e000
-mmap(0x7342cd614000, 52624, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7342cd614000
-close(3)                                = 0
-mmap(NULL, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7342cd638000
-arch_prctl(ARCH_SET_FS, 0x7342cd638740) = 0
-set_tid_address(0x7342cd638d68)         = 905
-set_robust_list(0x7342cd638a20, 24)     = 0
-rseq(0x7342cd6386a0, 0x20, 0, 0x53053053) = 0
-mprotect(0x7342cd60e000, 16384, PROT_READ) = 0
-mprotect(0x6354e635b000, 4096, PROT_READ) = 0
-mprotect(0x7342cd685000, 8192, PROT_READ) = 0
-prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
-getrandom("\x5b\x7f\x32\x69\x22\x2f\x84\x86", 8, GRND_NONBLOCK) = 8
-munmap(0x7342cd63b000, 20087)           = 0
-fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}) = 0
-brk(NULL)                               = 0x63550d2fe000
-brk(0x63550d31f000)                     = 0x63550d31f000
-write(1, "================================"..., 37) = 37
-write(1, "       LINUX ALARM CLOCK SYSTEM\n", 32) = 32
-write(1, "================================"..., 37) = 37
-fstat(0, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}) = 0
-write(1, "Enter alarm delay in seconds: ", 30) = 30
-read(0, "1\n", 1024)                    = 2
-rt_sigaction(SIGALRM, {sa_handler=0x6354e6359309, sa_mask=[ALRM], sa_flags=SA_RESTORER|SA_RESTART, sa_restorer=0x7342cd445cb0}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
-rt_sigprocmask(SIG_BLOCK, ~[], [], 8)   = 0
-clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, child_tidptr=0x7342cd638a10) = 906
-rt_sigprocmask(SIG_SETMASK, [], NULL, 8) = 0
-write(1, "\n", 1)                       = 1
-write(1, "[Parent Process]\n", 17)      = 17
-getpid()                                = 905
-write(1, "Parent PID: 905\n", 16)       = 16
-write(1, "Child PID : 906\n", 16)       = 16
-write(1, "Parent continues other activitie"..., 37) = 37
-write(1, "\n", 1)                       = 1
-write(1, "Enter 1 to cancel alarm or 0 to "..., 38) = 38
-read(0, 0x63550d2fe420, 1024)           = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
---- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=906, si_uid=1000, si_status=0, si_utime=0, si_stime=0} ---
-read(0strace: Process 905 detached
- <detached ...>
+1689  execve("./alarm_clock", ["./alarm_clock"], 0x7ffffc8a28b8 /* 31 vars */) = 0
+1689  brk(NULL)                         = 0x562f5cbcd000
+1689  mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x72e5e3291000
+1689  access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+1689  openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+1689  fstat(3, {st_mode=S_IFREG|0644, st_size=20087, ...}) = 0
+1689  mmap(NULL, 20087, PROT_READ, MAP_PRIVATE, 3, 0) = 0x72e5e328c000
+1689  close(3)                          = 0
+1689  openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+1689  read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 \250\2\0\0\0\0\0"..., 832) = 832
+1689  pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 840, 64) = 840
+1689  fstat(3, {st_mode=S_IFREG|0755, st_size=2186512, ...}) = 0
+1689  pread64(3, "\6\0\0\0\4\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@\0\0\0\0\0\0\0"..., 840, 64) = 840
+1689  mmap(NULL, 2231696, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x72e5e3000000
+1689  mmap(0x72e5e3028000, 1671168, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x28000) = 0x72e5e3028000
+1689  mmap(0x72e5e31c0000, 319488, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1c0000) = 0x72e5e31c0000
+1689  mmap(0x72e5e320e000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x20d000) = 0x72e5e320e000
+1689  mmap(0x72e5e3214000, 52624, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x72e5e3214000
+1689  close(3)                          = 0
+1689  mmap(NULL, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x72e5e3289000
+1689  arch_prctl(ARCH_SET_FS, 0x72e5e3289740) = 0
+1689  set_tid_address(0x72e5e3289d68)   = 1689
+1689  set_robust_list(0x72e5e3289a20, 24) = 0
+1689  rseq(0x72e5e32896a0, 0x20, 0, 0x53053053) = 0
+1689  mprotect(0x72e5e320e000, 16384, PROT_READ) = 0
+1689  mprotect(0x562f1d34f000, 4096, PROT_READ) = 0
+1689  mprotect(0x72e5e32d6000, 8192, PROT_READ) = 0
+1689  prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY}) = 0
+1689  getrandom("\x8b\x8b\x4f\xcd\x8f\x52\xce\x39", 8, GRND_NONBLOCK) = 8
+1689  munmap(0x72e5e328c000, 20087)     = 0
+1689  fstat(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}) = 0
+1689  brk(NULL)                         = 0x562f5cbcd000
+1689  brk(0x562f5cbee000)               = 0x562f5cbee000
+1689  write(1, "================================"..., 45) = 45
+1689  write(1, "         LINUX ALARM CLOCK SYSTE"..., 34) = 34
+1689  write(1, "================================"..., 45) = 45
+1689  write(1, "OS Concepts Used:\n", 18) = 18
+1689  write(1, "fork()  alarm()  SIGALRM  pause("..., 34) = 34
+1689  write(1, "kill()  SIGTERM  waitpid()\n", 27) = 27
+1689  write(1, "\n", 1)                 = 1
+1689  write(1, "================================"..., 45) = 45
+1689  write(1, "                 MENU\n", 22) = 22
+1689  write(1, "================================"..., 45) = 45
+1689  write(1, "1. Add Alarm\n", 13)    = 13
+1689  write(1, "2. Cancel Alarm\n", 16) = 16
+1689  write(1, "3. List Active Alarms\n", 22) = 22
+1689  write(1, "4. Exit\n", 8)          = 8
+1689  write(1, "================================"..., 45) = 45
+1689  write(1, "Enter choice: ", 14)    = 14
+1689  fstat(0, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}) = 0
+1689  read(0, 0x562f5cbcd420, 1024)     = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+1689  --- SIGINT {si_signo=SIGINT, si_code=SI_KERNEL} ---
+1689  +++ killed by SIGINT +++
