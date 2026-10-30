@@ -12,3 +12,4 @@
 | 8 | Exit with active alarms | Children are cancelled and collected |
 | 9 | Create an alarm in the browser | Alarm appears and remains after page reload |
 | 10 | Keep browser page open through alarm time | Browser alarm alert and tone are triggered |
+| 11 | Run `make trace` | A fresh `strace-run.txt` is generated |

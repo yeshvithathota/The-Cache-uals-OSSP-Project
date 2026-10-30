@@ -12,7 +12,7 @@ run: alarm_clock
 	./alarm_clock
 
 trace: alarm_clock
-	strace -f -o strace.txt ./alarm_clock
+	strace -f -o strace-run.txt ./alarm_clock
 
 clean:
-	rm -f alarm_clock strace.txt
+	rm -f alarm_clock strace-run.txt

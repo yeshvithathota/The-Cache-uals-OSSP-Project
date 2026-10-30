@@ -29,6 +29,8 @@ Trace its system calls with `strace` installed:
 make trace
 ```
 
+This writes a fresh trace to `strace-run.txt` and leaves the checked-in `strace.txt` example untouched.
+
 Clean generated files with `make clean`.
 
 ## OS concepts shown
