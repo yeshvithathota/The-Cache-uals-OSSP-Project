@@ -1,376 +1,172 @@
 #define _POSIX_C_SOURCE 200809L
 
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <errno.h>
+#include <unistd.h>
 
 #define MAX_ALARMS 10
 
-typedef struct
-{
+typedef struct {
     pid_t pid;
     int delay;
     int active;
 } Alarm;
 
-volatile sig_atomic_t alarm_triggered = 0;
-volatile sig_atomic_t alarm_cancelled = 0;
+static volatile sig_atomic_t alarm_triggered;
+static volatile sig_atomic_t alarm_cancelled;
 
-/* Handler for alarm signal */
-void alarm_handler(int sig)
-{
-    const char message[] =
-        "\n====================================\n"
-        "          ALARM RINGING! 🔔\n"
-        "====================================\n";
-
-    (void)sig;
-
+static void alarm_handler(int signal_number) {
+    static const char message[] = "\n====================================\n          ALARM RINGING!\n====================================\n";
+    (void)signal_number;
     alarm_triggered = 1;
-
-    write(STDOUT_FILENO, message, sizeof(message) - 1);
+    (void)write(STDOUT_FILENO, message, sizeof(message) - 1);
 }
 
-/* Handler for cancellation signal */
-void cancel_handler(int sig)
-{
-    const char message[] =
-        "\n[Child] Alarm cancelled.\n";
-
-    (void)sig;
-
+static void cancel_handler(int signal_number) {
+    static const char message[] = "\n[Child] Alarm cancelled.\n";
+    (void)signal_number;
     alarm_cancelled = 1;
-
-    write(STDOUT_FILENO, message, sizeof(message) - 1);
+    (void)write(STDOUT_FILENO, message, sizeof(message) - 1);
 }
 
-/* Check for finished child processes */
-void reap_finished_alarms(Alarm alarms[])
-{
-    int status;
+static int install_handler(int signal_number, void (*handler)(int)) {
+    struct sigaction action = {0};
+    action.sa_handler = handler;
+    sigemptyset(&action.sa_mask);
+    return sigaction(signal_number, &action, NULL);
+}
 
-    for (int i = 0; i < MAX_ALARMS; i++)
-    {
-        if (alarms[i].active)
-        {
-            pid_t result =
-                waitpid(alarms[i].pid, &status, WNOHANG);
+static void alarm_process(int delay) {
+    if (install_handler(SIGALRM, alarm_handler) == -1 ||
+        install_handler(SIGTERM, cancel_handler) == -1) {
+        perror("sigaction");
+        _exit(EXIT_FAILURE);
+    }
 
-            if (result == alarms[i].pid)
-            {
-                alarms[i].active = 0;
-            }
-        }
+    sigset_t watched, previous_mask;
+    sigemptyset(&watched);
+    sigaddset(&watched, SIGALRM);
+    sigaddset(&watched, SIGTERM);
+
+    /* Block first so a signal arriving before the wait cannot be lost. */
+    if (sigprocmask(SIG_BLOCK, &watched, &previous_mask) == -1) {
+        perror("sigprocmask");
+        _exit(EXIT_FAILURE);
+    }
+
+    printf("\n[Child Process]\nChild PID: %ld\nAlarm delay: %d second(s)\nChild process is suspended using sigsuspend()...\n",
+           (long)getpid(), delay);
+    fflush(stdout);
+    alarm((unsigned int)delay);
+
+    while (!alarm_triggered && !alarm_cancelled)
+        (void)sigsuspend(&previous_mask);
+
+    (void)sigprocmask(SIG_SETMASK, &previous_mask, NULL);
+    puts(alarm_triggered ? "[Child] Alarm event handled successfully." :
+                            "[Child] Alarm process terminated after cancellation.");
+    fflush(stdout);
+    _exit(EXIT_SUCCESS);
+}
+
+static void reap_finished_alarms(Alarm alarms[]) {
+    for (int i = 0; i < MAX_ALARMS; ++i) {
+        if (!alarms[i].active) continue;
+        int status;
+        pid_t result;
+        do {
+            result = waitpid(alarms[i].pid, &status, WNOHANG);
+        } while (result == -1 && errno == EINTR);
+        if (result == alarms[i].pid || (result == -1 && errno == ECHILD))
+            alarms[i].active = 0;
     }
 }
 
-/* Find alarm using child PID */
-int find_alarm(Alarm alarms[], pid_t pid)
-{
-    for (int i = 0; i < MAX_ALARMS; i++)
-    {
-        if (alarms[i].active &&
-            alarms[i].pid == pid)
-        {
-            return i;
-        }
-    }
-
+static int find_alarm(const Alarm alarms[], pid_t pid) {
+    for (int i = 0; i < MAX_ALARMS; ++i)
+        if (alarms[i].active && alarms[i].pid == pid) return i;
     return -1;
 }
 
-/* Code executed by every alarm child process */
-void alarm_process(int delay)
-{
-    struct sigaction alarm_action = {0};
-    struct sigaction cancel_action = {0};
-
-    /* Register SIGALRM handler */
-    alarm_action.sa_handler = alarm_handler;
-    sigemptyset(&alarm_action.sa_mask);
-
-    sigaction(SIGALRM, &alarm_action, NULL);
-
-    /* Register SIGTERM handler */
-    cancel_action.sa_handler = cancel_handler;
-    sigemptyset(&cancel_action.sa_mask);
-
-    sigaction(SIGTERM, &cancel_action, NULL);
-
-    printf("\n[Child Process]\n");
-    printf("Child PID: %d\n", getpid());
-    printf("Alarm delay: %d second(s)\n", delay);
-    printf("Child process is suspended using pause()...\n");
-
+static int read_integer(const char *prompt, int *value) {
+    char line[128], extra;
+    fputs(prompt, stdout);
     fflush(stdout);
-
-    /* Start timer */
-    alarm((unsigned int)delay);
-
-    /*
-       The child sleeps here until a signal arrives.
-       No continuous busy waiting is performed.
-    */
-    while (!alarm_triggered && !alarm_cancelled)
-    {
-        pause();
-    }
-
-    if (alarm_triggered)
-    {
-        printf("[Child] Alarm event handled successfully.\n");
-    }
-    else if (alarm_cancelled)
-    {
-        printf("[Child] Alarm process terminated after cancellation.\n");
-    }
-
-    fflush(stdout);
-
-    _exit(0);
+    if (!fgets(line, sizeof(line), stdin)) return 0;
+    if (sscanf(line, " %d %c", value, &extra) != 1) return -1;
+    return 1;
 }
 
-int main(void)
-{
+static void wait_for_child(pid_t pid) {
+    while (waitpid(pid, NULL, 0) == -1) {
+        if (errno != EINTR && errno != ECHILD) {
+            perror("waitpid");
+            break;
+        }
+        if (errno == ECHILD) break;
+    }
+}
+
+int main(void) {
     Alarm alarms[MAX_ALARMS] = {0};
+    puts("============================================\n         LINUX ALARM CLOCK SYSTEM\n============================================");
+    puts("OS concepts: fork()  alarm()  SIGALRM  sigsuspend()  SIGTERM  waitpid()");
 
-    int choice;
-
-    printf("============================================\n");
-    printf("         LINUX ALARM CLOCK SYSTEM\n");
-    printf("============================================\n");
-
-    printf("OS Concepts Used:\n");
-    printf("fork()  alarm()  SIGALRM  pause()\n");
-    printf("kill()  SIGTERM  waitpid()\n");
-
-    while (1)
-    {
-        /* Reap completed alarm processes */
+    for (;;) {
         reap_finished_alarms(alarms);
+        puts("\n1. Add Alarm\n2. Cancel Alarm\n3. List Active Alarms\n4. Exit");
+        int choice;
+        int input = read_integer("Enter choice: ", &choice);
+        if (input == 0) choice = 4;
+        else if (input < 0) { puts("Invalid input. Enter a number from 1 to 4."); continue; }
 
-        printf("\n============================================\n");
-        printf("                 MENU\n");
-        printf("============================================\n");
-
-        printf("1. Add Alarm\n");
-        printf("2. Cancel Alarm\n");
-        printf("3. List Active Alarms\n");
-        printf("4. Exit\n");
-
-        printf("============================================\n");
-        printf("Enter choice: ");
-        fflush(stdout);
-
-        if (scanf("%d", &choice) != 1)
-        {
-            printf("Invalid input.\n");
-
-            int ch;
-            while ((ch = getchar()) != '\n' && ch != EOF)
-            {
-            }
-
-            continue;
-        }
-
-        /* =========================================
-           ADD ALARM
-           ========================================= */
-
-        if (choice == 1)
-        {
-            int delay;
+        if (choice == 1) {
             int slot = -1;
-
-            /* Find empty alarm slot */
-            for (int i = 0; i < MAX_ALARMS; i++)
-            {
-                if (!alarms[i].active)
-                {
-                    slot = i;
-                    break;
-                }
-            }
-
-            if (slot == -1)
-            {
-                printf("Maximum number of active alarms reached.\n");
-                continue;
-            }
-
-            printf("Enter alarm delay in seconds: ");
-            fflush(stdout);
-
-            if (scanf("%d", &delay) != 1 || delay <= 0)
-            {
-                printf("Invalid alarm delay.\n");
-
-                int ch;
-                while ((ch = getchar()) != '\n' && ch != EOF)
-                {
-                }
-
-                continue;
-            }
-
-            /*
-               Create a child process to manage
-               this alarm.
-            */
-
+            for (int i = 0; i < MAX_ALARMS; ++i)
+                if (!alarms[i].active) { slot = i; break; }
+            if (slot == -1) { puts("Maximum number of active alarms reached."); continue; }
+            int delay;
+            input = read_integer("Enter alarm delay in seconds: ", &delay);
+            if (input <= 0 || delay <= 0) { puts("Invalid alarm delay. Enter a positive whole number."); continue; }
             pid_t pid = fork();
-
-            if (pid < 0)
-            {
-                perror("fork");
-                continue;
-            }
-
-            /* Child process */
-            if (pid == 0)
-            {
-                alarm_process(delay);
-            }
-
-            /* Parent process */
-            else
-            {
-                alarms[slot].pid = pid;
-                alarms[slot].delay = delay;
-                alarms[slot].active = 1;
-
-                printf("\n[Parent Process]\n");
-                printf("Parent PID: %d\n", getpid());
-                printf("Alarm child PID: %d\n", pid);
-                printf("Alarm created successfully.\n");
-            }
-        }
-
-        /* =========================================
-           CANCEL ALARM
-           ========================================= */
-
-        else if (choice == 2)
-        {
-            int pid;
-
-            printf("Enter Child PID to cancel: ");
-            fflush(stdout);
-
-            if (scanf("%d", &pid) != 1)
-            {
-                printf("Invalid PID.\n");
-                continue;
-            }
-
-            int index =
-                find_alarm(alarms, (pid_t)pid);
-
-            if (index == -1)
-            {
-                printf("No active alarm found for PID %d.\n", pid);
-            }
-            else
-            {
-                if (kill(alarms[index].pid, SIGTERM) == -1)
-                {
-                    perror("kill");
-                }
-                else
-                {
-                    waitpid(alarms[index].pid, NULL, 0);
-
-                    alarms[index].active = 0;
-
-                    printf(
-                        "Alarm with PID %d cancelled successfully.\n",
-                        pid
-                    );
-                }
-            }
-        }
-
-        /* =========================================
-           LIST ACTIVE ALARMS
-           ========================================= */
-
-        else if (choice == 3)
-        {
+            if (pid == -1) { perror("fork"); continue; }
+            if (pid == 0) alarm_process(delay);
+            alarms[slot] = (Alarm){.pid = pid, .delay = delay, .active = 1};
+            printf("Alarm created. Child PID: %ld\n", (long)pid);
+        } else if (choice == 2) {
+            int pid_value;
+            input = read_integer("Enter Child PID to cancel: ", &pid_value);
+            if (input <= 0 || pid_value <= 0) { puts("Invalid PID."); continue; }
+            int index = find_alarm(alarms, (pid_t)pid_value);
+            if (index == -1) { printf("No active alarm found for PID %d.\n", pid_value); continue; }
+            if (kill(alarms[index].pid, SIGTERM) == -1 && errno != ESRCH) perror("kill");
+            wait_for_child(alarms[index].pid);
+            alarms[index].active = 0;
+            printf("Alarm with PID %d cancelled.\n", pid_value);
+        } else if (choice == 3) {
             int found = 0;
-
-            printf("\nActive Alarms:\n");
-            printf("--------------------------------------------\n");
-
-            for (int i = 0; i < MAX_ALARMS; i++)
-            {
-                if (alarms[i].active)
-                {
-                    printf(
-                        "PID: %d | Delay: %d second(s)\n",
-                        alarms[i].pid,
-                        alarms[i].delay
-                    );
-
+            puts("\nActive Alarms:");
+            for (int i = 0; i < MAX_ALARMS; ++i) {
+                if (alarms[i].active) {
+                    printf("PID: %ld | Delay: %d second(s)\n", (long)alarms[i].pid, alarms[i].delay);
                     found = 1;
                 }
             }
-
-            if (!found)
-            {
-                printf("No active alarms.\n");
-            }
-        }
-
-        /* =========================================
-           EXIT
-           ========================================= */
-
-        else if (choice == 4)
-        {
-            printf("\nShutting down Alarm Clock System...\n");
-
-            /*
-               Cancel all remaining alarms.
-            */
-
-            for (int i = 0; i < MAX_ALARMS; i++)
-            {
-                if (alarms[i].active)
-                {
-                    kill(alarms[i].pid, SIGTERM);
-                }
-            }
-
-            /*
-               Wait for all child processes.
-            */
-
-            for (int i = 0; i < MAX_ALARMS; i++)
-            {
-                if (alarms[i].active)
-                {
-                    waitpid(alarms[i].pid, NULL, 0);
-
-                    alarms[i].active = 0;
-                }
-            }
-
-            printf("All alarm processes terminated.\n");
-            printf("Alarm Clock System exited successfully.\n");
-
+            if (!found) puts("No active alarms.");
+        } else if (choice == 4) {
+            puts("\nShutting down Alarm Clock System...");
+            for (int i = 0; i < MAX_ALARMS; ++i)
+                if (alarms[i].active && kill(alarms[i].pid, SIGTERM) == -1 && errno != ESRCH)
+                    perror("kill");
+            for (int i = 0; i < MAX_ALARMS; ++i)
+                if (alarms[i].active) { wait_for_child(alarms[i].pid); alarms[i].active = 0; }
+            puts("All alarm processes terminated. Exiting successfully.");
             break;
-        }
-
-        else
-        {
-            printf("Invalid choice. Please enter 1-4.\n");
-        }
+        } else puts("Invalid choice. Please enter 1-4.");
     }
-
-    return 0;
+    return EXIT_SUCCESS;
 }

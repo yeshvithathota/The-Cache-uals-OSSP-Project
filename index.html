@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5f1">
+  <title>Tempo — Alarm clock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ringing.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#top" aria-label="Tempo home"><span class="brand-mark">◷</span><span>tempo</span></a>
+      <div class="side-label">WORKSPACE</div>
+      <a class="nav-item active" href="#alarms"><span class="nav-icon">◷</span>Alarms <span class="nav-count" id="nav-count">0</span></a>
+      <a class="nav-item" href="#systems"><span class="nav-icon">⌘</span>System notes</a>
+      <div class="side-bottom"><div class="status-dot"></div><div><strong>Browser mode</strong><small>Runs on this device</small></div></div>
+    </aside>
+
+    <main id="top">
+      <header class="topbar"><div class="crumb">YOUR WORKSPACE <span>/</span> ALARMS</div><div class="top-right"><span class="online"><i></i> ALL SYSTEMS READY</span><button class="avatar" aria-label="Profile">Y</button></div></header>
+      <section class="hero">
+        <div><div class="eyebrow"><span class="spark">✳</span> A LITTLE MORE ON TIME</div><h1>Make time<br>for <em>what matters.</em></h1><p class="hero-copy">A calmer way to wake up, focus, and get where you’re going.</p></div>
+        <div class="clock-card"><div class="clock-label"><span>LOCAL TIME</span><span class="clock-live"><i></i> LIVE</span></div><div class="digital-clock" id="digital-clock">--:--<span>--</span></div><div class="clock-foot"><span id="today-date">Loading date…</span><span id="timezone">LOCAL TIMEZONE</span></div><div class="clock-orbit orbit-one"></div><div class="clock-orbit orbit-two"></div></div>
+      </section>
+
+      <section class="alarm-section" id="alarms">
+        <div class="section-heading"><div><div class="eyebrow muted">YOUR SCHEDULE</div><h2>Upcoming alarms <span class="heading-count" id="heading-count">0</span></h2></div><button class="add-button" id="open-modal"><span>＋</span> New alarm</button></div>
+        <div class="alarm-list" id="alarm-list"></div>
+        <div class="empty-state" id="empty-state"><div class="empty-icon">◷</div><h3>A little quiet here.</h3><p>Add an alarm to give your next moment a nudge.</p><button class="text-button" id="empty-add">Create your first alarm <span>↗</span></button></div>
+      </section>
+
+      <section class="systems-section" id="systems"><div class="systems-copy"><div class="eyebrow muted">UNDER THE HOOD</div><h2>Small app.<br><em>Big OS ideas.</em></h2><p>Tempo’s original Linux engine gives each alarm its own child process. No busy waiting—just a sleeping process, woken by a signal.</p><a class="repo-link" href="https://github.com/yeshvithathota/The-Cache-uals-OSSP-Project" target="_blank" rel="noreferrer">Explore the C project <span>↗</span></a></div><div class="concept-grid"><article><span class="concept-icon">⑂</span><div class="concept-title">Process creation</div><code>fork()</code><p>One child process manages each timer.</p></article><article><span class="concept-icon">◌</span><div class="concept-title">Signal handling</div><code>SIGALRM</code><p>The kernel notifies the child when time is up.</p></article><article><span class="concept-icon">Ⅱ</span><div class="concept-title">Efficient waiting</div><code>pause()</code><p>The process sleeps instead of polling.</p></article><article><span class="concept-icon">⇄</span><div class="concept-title">Synchronization</div><code>waitpid()</code><p>The parent collects finished child processes.</p></article></div></section>
+      <footer><span>MADE FOR THE MOMENT YOU NEED IT.</span><span>LINUX ALARM CLOCK SYSTEM <b>·</b> OS PROJECT</span></footer>
+    </main>
+  </div>
+  <dialog id="alarm-dialog"><form id="alarm-form" method="dialog"><div class="dialog-top"><div><div class="eyebrow muted">SET A MOMENT</div><h2>New alarm</h2></div><button class="close-button" type="button" id="close-modal" aria-label="Close">×</button></div><label for="alarm-label">What’s the occasion?</label><input id="alarm-label" maxlength="48" placeholder="e.g. Stretch break" autocomplete="off"><label for="alarm-time">When should it ring?</label><input id="alarm-time" type="time" required><div class="dialog-hint">Alarms run while this page is open.</div><div class="dialog-actions"><button class="cancel-button" type="button" id="cancel-modal">Cancel</button><button class="add-button" type="submit">Save alarm <span>↗</span></button></div></form></dialog>
+  <dialog id="ring-dialog" class="ring-dialog" aria-labelledby="ring-title"><div class="ring-content"><div class="ring-symbol">♩</div><div class="eyebrow">TIME TO WAKE</div><h2 id="ring-title">Alarm</h2><p id="ring-message">Your alarm is ringing.</p><div class="ring-actions"><button class="snooze-button" id="snooze-alarm" type="button">↻ <span>Snooze</span><small>5 min</small></button><button class="stop-button" id="stop-alarm" type="button">■ <span>Cancel alarm</span></button></div><div class="ring-hint">The sound continues until you snooze or cancel.</div></div></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

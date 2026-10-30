@@ -1,14 +1,14 @@
-# Alarm Clock System - Test Cases and Results
+# Alarm Clock System — Manual Checks
 
-| Test ID | Test Case | Input / Action | Expected Result | Status |
-|---|---|---|---|---|
-| TC01 | Compile program | `make` | Program compiles successfully | PASS |
-| TC02 | Add alarm | Choice 1, delay 5 | Child process created | PASS |
-| TC03 | Alarm notification | Wait for timer | ALARM RINGING displayed | PASS |
-| TC04 | Multiple alarms | Add 10 sec and 5 sec alarms | Multiple child processes created | PASS |
-| TC05 | List alarms | Choice 3 | Active PIDs and delays displayed | PASS |
-| TC06 | Cancel alarm | Choice 2 + child PID | Alarm cancelled | PASS |
-| TC07 | Invalid delay | Enter 0 or negative value | Invalid delay rejected | PASS |
-| TC08 | Invalid menu | Enter 9 | Invalid choice displayed | PASS |
-| TC09 | Exit | Choice 4 | All child processes terminated | PASS |
-| TC10 | System-call tracing | `make trace` | `strace.txt` generated | PASS |
+| ID | Check | Expected result |
+|---|---|---|
+| 1 | Build with `make` on Linux | C program compiles without warnings |
+| 2 | Add a positive delay | A child process is created and reports its PID |
+| 3 | Wait for an alarm | Child wakes on `SIGALRM` and exits |
+| 4 | Add multiple alarms | Each alarm has an independent child process |
+| 5 | List active alarms | Parent lists only alarms that have not exited |
+| 6 | Cancel an alarm by PID | Parent sends `SIGTERM` and reaps the child |
+| 7 | Enter malformed menu input | Input is rejected without getting stuck |
+| 8 | Exit with active alarms | Children are cancelled and collected |
+| 9 | Create an alarm in the browser | Alarm appears and remains after page reload |
+| 10 | Keep browser page open through alarm time | Browser alarm alert and tone are triggered |
